@@ -4,7 +4,9 @@ import create_dynamodb_tables
 import create_cognito_user_pool
 import create_iam_policy
 import create_iam_role
+import create_opensearch_index
 import upload_blueprints
+
 
 class DeploymentResult:
     def __init__(self):
@@ -15,9 +17,14 @@ class DeploymentResult:
         self.cognito: Dict[str, str] = {}
         self.iam_policy: Dict[str, str] = {}
         self.iam_role: Dict[str, str] = {}
+        self.opensearch: Dict[str, str] = {}
         self.status_blueprints: Dict[str, str] = {}
 
-def deploy_environment(env_name: str, aws_profile: str, aws_region: str) -> DeploymentResult:
+def deploy_environment(
+    env_name: str,
+    aws_profile: str,
+    aws_region: str,
+) -> DeploymentResult:
     """
     Deploy all resources for an environment and return structured results
     """
@@ -58,8 +65,21 @@ def deploy_environment(env_name: str, aws_profile: str, aws_region: str) -> Depl
         aws_profile=aws_profile,
         aws_region=aws_region
     )
-    
-    # Step 5: Add default Blueprints
+
+    # Step 5: Create OpenSearch index (domain {env}-search or collection {env}-collection)
+    print("\n🔍 Creating OpenSearch index...")
+    try:
+        result.opensearch = create_opensearch_index.run(
+            env_name=env_name,
+            aws_profile=aws_profile,
+            aws_region=aws_region,
+            lambda_role_arn=result.iam_role.get("role_arn"),
+        )
+    except ValueError as e:
+        print(f"⚠️  OpenSearch skipped: {e}")
+        result.opensearch = {}
+
+    # Step 6: Add default Blueprints
     print("\nAdding default blueprints to DB...")
     result.status_blueprints = upload_blueprints.run(
         env_name=env_name,
@@ -100,8 +120,13 @@ def print_deployment_summary(result: DeploymentResult):
     print("\nS3")
     print("-------------")
     print(f"Bucket ARN : {result.iam_policy['s3_bucket_arn']}")
-    
-    
+
+    if result.opensearch:
+        print("\nOpenSearch")
+        print("-------------")
+        print(f"Endpoint : {result.opensearch['opensearch_endpoint']}")
+        print(f"Index    : {result.opensearch['opensearch_index']}")
+
     print("\nBlueprints uploaded")
     print("-------------")
     print(f"Success : {len(result.status_blueprints['success'])} blueprints")
@@ -111,16 +136,16 @@ def print_deployment_summary(result: DeploymentResult):
 def main():
     parser = argparse.ArgumentParser(description="Deploy complete environment")
     parser.add_argument("environment_name", help="Name of the environment to deploy")
-    parser.add_argument("--aws-profile", default="default", help="AWS profile to use")
+    parser.add_argument("--aws-profile", required=True, help="AWS profile to use (required)")
     parser.add_argument("--aws-region", default="us-east-1", help="AWS region to deploy to")
-    
+
     args = parser.parse_args()
-    
+
     try:
         result = deploy_environment(
             env_name=args.environment_name,
             aws_profile=args.aws_profile,
-            aws_region=args.aws_region
+            aws_region=args.aws_region,
         )
         print_deployment_summary(result)
     except Exception as e:

@@ -119,6 +119,11 @@ def create_iam_policy(env_name, cognito_user_pool_id, aws_region, aws_profile):
                     f"arn:aws:execute-api:{aws_region}:{aws_account_id}:*/*/POST/@connections/*",
                     f"arn:aws:execute-api:{aws_region}:{aws_account_id}:*/stage/POST/_schd/ping"
                 ]
+            },
+            {
+                "Effect": "Allow",
+                "Action": "aoss:APIAccessAll",
+                "Resource": "*"
             }
         ]
     }

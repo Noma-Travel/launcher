@@ -10,11 +10,13 @@ python3.12 -m venv launch-venv
 source launch-venv/bin/activate
 ```
 
-#### 2. Install boto3
+#### 2. Install dependencies
 
 ```
-pip install boto3
+pip install boto3 opensearch-py
 ```
+
+(opensearch-py is required only if you use the OpenSearch index step)
 
 
 #### 3. List available AWS profiles. There should be at least one
@@ -35,6 +37,9 @@ cd scripts
 python deploy_environment.py <environment_name> --aws-region <aws_region>  --aws-profile <aws_profile>
 ```
 
+**OpenSearch:** The deploy creates the index automatically. It uses provisioned domain `{env}-search` if it exists, otherwise creates OpenSearch Serverless collection `{env}-collection` with required policies. No manual setup needed.
+
+Standalone: `python create_opensearch_index.py <env_name> --aws-profile <aws_profile> --aws-region <region>`
 
  NEXT STEPS
 The next step is to run the Zappa installer. Go back to the document ../CLOUD_README.md
@@ -44,6 +49,7 @@ a. <aws_region>
 b. <bucket_name>
 c. <cognito_user_pool_id>
 d. <cognito_app_client_id>
+e. OPENSEARCH_ENDPOINT, OPENSEARCH_INDEX (if OpenSearch step was run)
 
 
 
@@ -73,6 +79,11 @@ Enter the region and cognito ids
 Enter the bucket name
 
     S3_BUCKET_NAME = '<name>-xxxxx'
+
+If OpenSearch was configured, add:
+
+    OPENSEARCH_ENDPOINT = 'https://search-xxx.us-east-1.es.amazonaws.com'
+    OPENSEARCH_INDEX = '<env>-documents'
 
 Place this file in /system
 
