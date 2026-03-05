@@ -66,7 +66,7 @@ def deploy_environment(
         aws_region=aws_region
     )
 
-    # Step 5: Create OpenSearch index (domain {env}-search or collection {env}-collection)
+    '''# Step 5: Create OpenSearch index (domain {env}-search or collection {env}-collection)
     print("\n🔍 Creating OpenSearch index...")
     try:
         result.opensearch = create_opensearch_index.run(
@@ -78,6 +78,7 @@ def deploy_environment(
     except ValueError as e:
         print(f"⚠️  OpenSearch skipped: {e}")
         result.opensearch = {}
+    '''
 
     # Step 6: Add default Blueprints
     print("\nAdding default blueprints to DB...")

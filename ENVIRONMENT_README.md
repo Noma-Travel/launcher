@@ -37,9 +37,12 @@ cd scripts
 python deploy_environment.py <environment_name> --aws-region <aws_region>  --aws-profile <aws_profile>
 ```
 
+
 **OpenSearch:** The deploy creates the index automatically. It uses provisioned domain `{env}-search` if it exists, otherwise creates OpenSearch Serverless collection `{env}-collection` with required policies. No manual setup needed.
 
+
 Standalone: `python create_opensearch_index.py <env_name> --aws-profile <aws_profile> --aws-region <region>`
+
 
  NEXT STEPS
 The next step is to run the Zappa installer. Go back to the document ../CLOUD_README.md
