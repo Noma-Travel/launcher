@@ -123,17 +123,23 @@ def create_integration(apigw, api_id: str, route_key: str, integration_uri: str)
         # Remove @ symbol if present at the start of the integration URI
         cleaned_uri = integration_uri.lstrip('@')
         
-        # Define the request template
+        # Define the request template.
+        # This must forward the full chat payload expected by the backend `/_chat/message` endpoint.
+        # Route selection is `$request.body.action`, so `action` is required.
         request_template = '''#set($inputRoot = $input.path('$'))
-            {
-            "handler": "$inputRoot.handler",
-            "portfolio": "$inputRoot.portfolio",
-            "org": "$inputRoot.org",
-            "entity_type": "$inputRoot.entity_type",
-            "entity_id": "$inputRoot.entity_id",
-            "thread": "$inputRoot.thread",
-            "connectionId": "$context.connectionId"
-            }'''
+{
+  "action": "$inputRoot.action",
+  "data": "$inputRoot.data",
+  "entity_type": "$inputRoot.entity_type",
+  "entity_id": "$inputRoot.entity_id",
+  "thread": "$inputRoot.thread",
+  "portfolio": "$inputRoot.portfolio",
+  "org": "$inputRoot.org",
+  "core": "$inputRoot.core",
+  "next": "$inputRoot.next",
+  "connectionId": "$context.connectionId",
+  "auth": "$inputRoot.auth"
+}'''
 
         response = apigw.create_integration(
             ApiId=api_id,
@@ -149,6 +155,24 @@ def create_integration(apigw, api_id: str, route_key: str, integration_uri: str)
         return response
     except Exception as e:
         print(f"❌ Error creating integration: {e}")
+        raise
+
+def create_mock_integration(apigw, api_id: str, route_key: str) -> Dict:
+    """Create a MOCK integration (use for $connect/$disconnect)."""
+    print(f"🛠️  Creating MOCK integration for route: {route_key}...")
+    try:
+        response = apigw.create_integration(
+            ApiId=api_id,
+            IntegrationType='MOCK',
+            PassthroughBehavior='WHEN_NO_MATCH',
+            RequestTemplates={
+                'application/json': '{"statusCode": 200}'
+            }
+        )
+        print(f"✅ MOCK integration for route '{route_key}' created successfully.")
+        return response
+    except Exception as e:
+        print(f"❌ Error creating MOCK integration: {e}")
         raise
 
 def create_stage(apigw, api_id: str, stage_name: str) -> Dict:
@@ -178,8 +202,8 @@ def create_default_routes(apigw, api_id: str, integration_target: str) -> None:
             route_response = create_route(apigw, api_id, route_key)
             route_id = route_response['RouteId']
 
-            # Create integration
-            integration_response = create_integration(apigw, api_id, route_key, integration_target)
+            # $connect/$disconnect should NOT forward to the chat backend. They must succeed quickly.
+            integration_response = create_mock_integration(apigw, api_id, route_key)
             integration_id = integration_response['IntegrationId']
 
             # Update route with integration target
