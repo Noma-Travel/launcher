@@ -1,0 +1,3 @@
+{
+  "application/json": "#set($inputRoot = $input.path('$'))\n{\n  \"action\": \"$util.escapeJavaScript($inputRoot.action)\",\n  \"data\": \"$util.escapeJavaScript($inputRoot.data)\",\n  \"entity_type\": \"$util.escapeJavaScript($inputRoot.entity_type)\",\n  \"entity_id\": \"$util.escapeJavaScript($inputRoot.entity_id)\",\n  \"thread\": \"$util.escapeJavaScript($inputRoot.thread)\",\n  \"portfolio\": \"$util.escapeJavaScript($inputRoot.portfolio)\",\n  \"org\": \"$util.escapeJavaScript($inputRoot.org)\",\n  \"core\": \"$util.escapeJavaScript($inputRoot.core)\",\n  \"next\": \"$util.escapeJavaScript($inputRoot.next)\",\n  \"connectionId\": \"$context.connectionId\",\n  \"auth\": \"$util.escapeJavaScript($inputRoot.auth)\"\n}"
+}

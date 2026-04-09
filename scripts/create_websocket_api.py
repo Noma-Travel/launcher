@@ -126,19 +126,20 @@ def create_integration(apigw, api_id: str, route_key: str, integration_uri: str)
         # Define the request template.
         # This must forward the full chat payload expected by the backend `/_chat/message` endpoint.
         # Route selection is `$request.body.action`, so `action` is required.
+        # escapeJavaScript keeps user text (quotes, newlines) from breaking the JSON body.
         request_template = '''#set($inputRoot = $input.path('$'))
 {
-  "action": "$inputRoot.action",
-  "data": "$inputRoot.data",
-  "entity_type": "$inputRoot.entity_type",
-  "entity_id": "$inputRoot.entity_id",
-  "thread": "$inputRoot.thread",
-  "portfolio": "$inputRoot.portfolio",
-  "org": "$inputRoot.org",
-  "core": "$inputRoot.core",
-  "next": "$inputRoot.next",
+  "action": "$util.escapeJavaScript($inputRoot.action)",
+  "data": "$util.escapeJavaScript($inputRoot.data)",
+  "entity_type": "$util.escapeJavaScript($inputRoot.entity_type)",
+  "entity_id": "$util.escapeJavaScript($inputRoot.entity_id)",
+  "thread": "$util.escapeJavaScript($inputRoot.thread)",
+  "portfolio": "$util.escapeJavaScript($inputRoot.portfolio)",
+  "org": "$util.escapeJavaScript($inputRoot.org)",
+  "core": "$util.escapeJavaScript($inputRoot.core)",
+  "next": "$util.escapeJavaScript($inputRoot.next)",
   "connectionId": "$context.connectionId",
-  "auth": "$inputRoot.auth"
+  "auth": "$util.escapeJavaScript($inputRoot.auth)"
 }'''
 
         response = apigw.create_integration(
